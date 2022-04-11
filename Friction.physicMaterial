@@ -6,7 +6,7 @@ PhysicMaterial:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: HighFriction
+  m_Name: Friction
   dynamicFriction: 15
   staticFriction: 15
   bounciness: 0

@@ -6,7 +6,7 @@ using UnityEditor.XR.LegacyInputHelpers;
 using UnityEngine.XR;
 using UnityEngine.InputSystem;
 
-public class HexaBodyScript : MonoBehaviour
+public class HexaBody : MonoBehaviour
 {
     [Header("XR Toolkit Parts")]
     public XRRig XRRig;
