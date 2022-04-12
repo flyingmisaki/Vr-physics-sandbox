@@ -6,67 +6,62 @@ using UnityEditor.XR.LegacyInputHelpers;
 using UnityEngine.XR;
 using UnityEngine.InputSystem;
 
-public class HexaBody : MonoBehaviour
-{
-    [Header("XR Toolkit Parts")]
+public class HexaBody : MonoBehaviour {
+    [Header("XR Rig")]
     public XRRig XRRig;
     public GameObject XRCamera;
 
-    [Header("Actionbased Controller")]
+    [Header("Controllers")]
     public ActionBasedController CameraController;
     public ActionBasedController RightHandController;
     public ActionBasedController LeftHandController;
 
     public InputActionReference RightTrackPadPress;
     public InputActionReference RightTrackPadTouch;
-
     public InputActionReference LeftTrackPadPress;
     public InputActionReference LeftTrackPadTouch;
 
-    [Header("Hexabody Parts")]
+    [Header("Hexabody")]
     public GameObject Body;
     public GameObject Head;
     public GameObject Chest;
     public GameObject Fender;
-    public GameObject Monoball;
+    public GameObject Sphere;
 
     public ConfigurableJoint RightHandJoint;
     public ConfigurableJoint LeftHandJoint;
     public ConfigurableJoint Spine;
 
-    [Header("Hexabody Movespeed")]
-    public float TurnSpeed;
-    public float moveForceCrouch;
-    public float moveForceWalk;
-    public float moveForceSprint;
+    [Header("Movement")]
+    public float turnSpeed = 3;
+    public float moveForceCrouch = 15;
+    public float moveForceWalk = 30;
+    public float moveForceSprint = 45;
 
-    [Header("Hexabody Drag")]
-    public float angularDragOnMove;
-    public float angularBreakDrag;
+    [Header("Drag")]
+    public float angularDragOnMove = 40;
+    public float angularBreakDrag = 100;
 
-    [Header("Hexabody Croch & Jump")]
+    [Header("Crouch and Jump")]
+    public float crouchSpeed = 1.2f;
+    public float minCrouch = 0.1f;
+    public float maxCrouch = 1.8f;
+    private float additionalHeight;
+    public Vector3 crouchTarget;
+
     bool jumping = false;
 
-    public float crouchSpeed;
-    public float lowestCrouch;
-    public float highestCrouch;
-    private float additionalHeight;
-
-    public Vector3 CrouchTarget;
-
-    //---------Input Values---------------------------------------------------------------------------------------------------------------//
-
+    // Input
     private Quaternion headYaw;
     private Vector3 moveDirection;
-    private Vector3 monoballTorque;
+    private Vector3 sphereTorque;
 
-    private Vector3 CameraControllerPos;
+    private Vector3 cameraControllerPosition;
+    private Vector3 rightHandControllerPosition;
+    private Vector3 leftHandControllerPosition;
 
-    private Vector3 RightHandControllerPos;
-    private Vector3 LeftHandControllerPos;
-
-    private Quaternion RightHandControllerRotation;
-    private Quaternion LeftHandControllerRotation;
+    private Quaternion rightHandControllerRotation;
+    private Quaternion leftHandControllerRotation;
 
     private Vector2 RightTrackpad;
     private Vector2 LeftTrackpad;
@@ -78,162 +73,131 @@ public class HexaBody : MonoBehaviour
     private float LeftTrackpadTouched;
 
     void Start() {
-        additionalHeight = (0.5f * Monoball.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
+        additionalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
     }
 
-    
     void Update() {
-        getContollerInputValues();
-        CameraToPlayer();
-        XRRigToPlayer();
+        GetControllerInputs();
+        RigToBody();
     }
 
     private void FixedUpdate()  {
-        movePlayerViaController();
-        jump();
-        ajust();
-
-        if (!jumping) {
-            spineContractionOnRealWorldCrouch();
-        }
-
-        rotatePlayer();
-        moveAndRotateHand();
+        MoveAndRotateBody();
+        MoveAndRotateHands();
+        Ajust();
+        Jump();
+        if (!jumping) PhysicalCrouch();
     }
 
-    private void getContollerInputValues() {
-        //Right Controller
-        //Position & Rotation
-        RightHandControllerPos = RightHandController.positionAction.action.ReadValue<Vector3>();
-        RightHandControllerRotation = RightHandController.rotationAction.action.ReadValue<Quaternion>();
-
+    private void GetControllerInputs() {
+        // Right Controller Position & Rotation
+        rightHandControllerPosition = RightHandController.positionAction.action.ReadValue<Vector3>();
+        rightHandControllerRotation = RightHandController.rotationAction.action.ReadValue<Quaternion>();
         //Trackpad
         RightTrackpad = RightHandController.translateAnchorAction.action.ReadValue<Vector2>();
         RightTrackpadPressed = RightTrackPadPress.action.ReadValue<float>();
         RightTrackpadTouched = RightTrackPadTouch.action.ReadValue<float>();
 
-        //Left Contoller
-        //Position & Rotation
-        LeftHandControllerPos = LeftHandController.positionAction.action.ReadValue<Vector3>();
-        LeftHandControllerRotation = LeftHandController.rotationAction.action.ReadValue<Quaternion>();
-
+        // Left Contoller Position & Rotation
+        leftHandControllerPosition = LeftHandController.positionAction.action.ReadValue<Vector3>();
+        leftHandControllerRotation = LeftHandController.rotationAction.action.ReadValue<Quaternion>();
         //Trackpad
         LeftTrackpad = LeftHandController.translateAnchorAction.action.ReadValue<Vector2>();
         LeftTrackpadPressed = LeftTrackPadPress.action.ReadValue<float>();
         LeftTrackpadTouched = LeftTrackPadTouch.action.ReadValue<float>();
 
         //Camera Inputs
-        CameraControllerPos = CameraController.positionAction.action.ReadValue<Vector3>();
+        cameraControllerPosition = CameraController.positionAction.action.ReadValue<Vector3>();
 
         headYaw = Quaternion.Euler(0, XRRig.cameraGameObject.transform.eulerAngles.y, 0);
         moveDirection = headYaw * new Vector3(LeftTrackpad.x, 0, LeftTrackpad.y);
-        monoballTorque = new Vector3(moveDirection.z, 0, -moveDirection.x);
+        sphereTorque = new Vector3(moveDirection.z, 0, -moveDirection.x);
     }
 
-    //------Transforms---------------------------------------------------------------------------------------
-    private void CameraToPlayer() {
+    // Camera and Rig stuff
+    private void RigToBody() {
+        // Move Camera to Body
         XRCamera.transform.position = Head.transform.position;
+        // Move Rig to Body
+        XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
     }
 
-    private void XRRigToPlayer() {
-        XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Monoball.transform.localScale.y), Fender.transform.position.z);
+    // Movement
+    private void MoveAndRotateBody() {
+        if (!jumping) {
+            if (LeftTrackpadTouched == 0) StopSphere();
+            if (LeftTrackpadPressed == 0 && LeftTrackpadTouched == 1) MoveSphere(moveForceWalk);
+            if (LeftTrackpadPressed == 1 && LeftTrackpadTouched == 1) MoveSphere(moveForceSprint);  
+        }
+        if (jumping) {
+            if (LeftTrackpadTouched == 0) StopSphere();
+            if (LeftTrackpadTouched == 1) MoveSphere(moveForceCrouch);
+        }
+
+        RotateBody();
     }
 
-    private void rotatePlayer() {
+    private void RotateBody() {
         if (RightTrackpadPressed == 1) return;
-        Head.transform.Rotate(0, RightTrackpad.x * TurnSpeed, 0, Space.Self);
+        Head.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
         Chest.transform.rotation = headYaw;
     }
 
-    //-----HexaBody Movement---------------------------------------------------------------------------------
-    private void movePlayerViaController() {
-        if (!jumping) {
-            if (LeftTrackpadTouched == 0) {
-                stopMonoball();
-            }
+    private void MoveSphere(float force) {
+        Sphere.GetComponent<Rigidbody>().freezeRotation = false;
+        Sphere.GetComponent<Rigidbody>().angularDrag = angularDragOnMove;
+        Sphere.GetComponent<Rigidbody>().AddTorque(sphereTorque.normalized * (force * 2), ForceMode.Force);
+    }
 
-            if (LeftTrackpadPressed == 0 && LeftTrackpadTouched == 1) {
-                moveMonoball(moveForceWalk);
-            }
-
-            if (LeftTrackpadPressed == 1 && LeftTrackpadTouched == 1) {
-                moveMonoball(moveForceSprint);
-            }
-        }
-
-        else if (jumping) {
-            // if (LeftTrackpadTouched == 0) {
-            //     stopMonoball();
-            // }
-
-            if (LeftTrackpadTouched == 1) {
-                moveMonoball(moveForceCrouch);
-            }
+    private void StopSphere() {
+        Sphere.GetComponent<Rigidbody>().angularDrag = angularBreakDrag;
+        if (Sphere.GetComponent<Rigidbody>().velocity == Vector3.zero) {
+            Sphere.GetComponent<Rigidbody>().freezeRotation = true;
         }
     }
 
-    private void moveMonoball(float force) {
-        Monoball.GetComponent<Rigidbody>().freezeRotation = false;
-        Monoball.GetComponent<Rigidbody>().angularDrag = angularDragOnMove;
-        Monoball.GetComponent<Rigidbody>().AddTorque(monoballTorque.normalized * (force * 2), ForceMode.Force);
+    // Jump
+    private void Jump() {
+        if (RightTrackpadPressed == 1 && RightTrackpad.y < 0) JumpSitDown();
+        if ((RightTrackpadPressed == 0) && jumping == true) JumpSitUp();
     }
 
-    private void stopMonoball() {
-        Monoball.GetComponent<Rigidbody>().angularDrag = angularBreakDrag;
-
-        if (Monoball.GetComponent<Rigidbody>().velocity == Vector3.zero) {
-            Monoball.GetComponent<Rigidbody>().freezeRotation = true;
+    private void Ajust() {
+        if (RightTrackpad.y > 0) {
+            crouchTarget.y += crouchSpeed * Time.fixedDeltaTime;
+            Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
+        }
+        if (RightTrackpad.y < 0) {
+            crouchTarget.y -= crouchSpeed * Time.fixedDeltaTime;
+            Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
         }
     }
 
-    //------Jumping------------------------------------------------------------------------------------------
-    private void jump() {
-        if (RightTrackpadPressed == 1 && RightTrackpad.y < 0) {
+    private void JumpSitDown() {
+        if (crouchTarget.y >= minCrouch) {
             jumping = true;
-            jumpSitDown();
-        }
-
-        if ((RightTrackpadPressed == 0) && jumping == true) {
-            jumping = false;
-            jumpSitUp();
-        }
-
-    }
-
-    private void ajust() {
-        if (RightTrackpadPressed == 1 && RightTrackpad.y > 0) {
-            CrouchTarget.y += crouchSpeed * Time.fixedDeltaTime;
-            Spine.targetPosition = new Vector3(0, CrouchTarget.y, 0);
+            crouchTarget.y -= crouchSpeed * Time.fixedDeltaTime;
+            Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
         }
     }
 
-    private void jumpSitDown() {
-        if (CrouchTarget.y >= lowestCrouch) {
-            CrouchTarget.y -= crouchSpeed * Time.fixedDeltaTime;
-            Spine.targetPosition = new Vector3(0, CrouchTarget.y, 0);
-        }
+    private void JumpSitUp() {
+        jumping = false;
+        crouchTarget = new Vector3(0, maxCrouch - additionalHeight, 0);
+        Spine.targetPosition = crouchTarget;
     }
 
-    private void jumpSitUp() {
-        CrouchTarget = new Vector3(0, highestCrouch - additionalHeight, 0);
-        Spine.targetPosition = CrouchTarget;
+    // Joints
+    private void PhysicalCrouch() {
+        crouchTarget.y = Mathf.Clamp(cameraControllerPosition.y - additionalHeight, minCrouch, maxCrouch - additionalHeight);
+        Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
-    //------Joint Control-----------------------------------------------------------------------------------
-    private void spineContractionOnRealWorldCrouch() {
-        CrouchTarget.y = Mathf.Clamp(CameraControllerPos.y - additionalHeight, lowestCrouch, highestCrouch - additionalHeight);
-        Spine.targetPosition = new Vector3(0, CrouchTarget.y, 0);
+    private void MoveAndRotateHands() {
+        RightHandJoint.targetPosition = rightHandControllerPosition - cameraControllerPosition;
+        LeftHandJoint.targetPosition = leftHandControllerPosition - cameraControllerPosition;
 
-    }
-
-    private void moveAndRotateHand() {
-        // RightHandJoint.targetPosition = RightHandControllerPos - CameraControllerPos + new Vector3(0, offset, 0);
-        // LeftHandJoint.targetPosition = LeftHandControllerPos - CameraControllerPos + new Vector3(0, offset, 0);
-
-        RightHandJoint.targetPosition = RightHandControllerPos - CameraControllerPos;
-        LeftHandJoint.targetPosition = LeftHandControllerPos - CameraControllerPos;
-
-        RightHandJoint.targetRotation = RightHandControllerRotation;
-        LeftHandJoint.targetRotation = LeftHandControllerRotation;
+        RightHandJoint.targetRotation = rightHandControllerRotation;
+        LeftHandJoint.targetRotation = leftHandControllerRotation;
     }
 }
