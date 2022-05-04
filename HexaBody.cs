@@ -76,12 +76,11 @@ public class HexaBody : MonoBehaviour {
         additionalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
     }
 
-    void Update() {
+    void Update() {}
+
+    private void FixedUpdate() {
         GetControllerInputs();
         RigToBody();
-    }
-
-    private void FixedUpdate()  {
         MoveAndRotateBody();
         MoveAndRotateHands();
         Ajust();
@@ -93,7 +92,7 @@ public class HexaBody : MonoBehaviour {
         // Right Controller Position & Rotation
         rightHandControllerPosition = RightHandController.positionAction.action.ReadValue<Vector3>();
         rightHandControllerRotation = RightHandController.rotationAction.action.ReadValue<Quaternion>();
-        //Trackpad
+        // Trackpad
         RightTrackpad = RightHandController.translateAnchorAction.action.ReadValue<Vector2>();
         RightTrackpadPressed = RightTrackPadPress.action.ReadValue<float>();
         RightTrackpadTouched = RightTrackPadTouch.action.ReadValue<float>();
@@ -101,14 +100,15 @@ public class HexaBody : MonoBehaviour {
         // Left Contoller Position & Rotation
         leftHandControllerPosition = LeftHandController.positionAction.action.ReadValue<Vector3>();
         leftHandControllerRotation = LeftHandController.rotationAction.action.ReadValue<Quaternion>();
-        //Trackpad
+        // Trackpad
         LeftTrackpad = LeftHandController.translateAnchorAction.action.ReadValue<Vector2>();
         LeftTrackpadPressed = LeftTrackPadPress.action.ReadValue<float>();
         LeftTrackpadTouched = LeftTrackPadTouch.action.ReadValue<float>();
 
-        //Camera Inputs
+        // Camera Inputs
         cameraControllerPosition = CameraController.positionAction.action.ReadValue<Vector3>();
 
+        // Values
         headYaw = Quaternion.Euler(0, XRRig.cameraGameObject.transform.eulerAngles.y, 0);
         moveDirection = headYaw * new Vector3(LeftTrackpad.x, 0, LeftTrackpad.y);
         sphereTorque = new Vector3(moveDirection.z, 0, -moveDirection.x);
@@ -127,7 +127,7 @@ public class HexaBody : MonoBehaviour {
         if (!jumping) {
             if (LeftTrackpadTouched == 0) StopSphere();
             if (LeftTrackpadPressed == 0 && LeftTrackpadTouched == 1) MoveSphere(moveForceWalk);
-            if (LeftTrackpadPressed == 1 && LeftTrackpadTouched == 1) MoveSphere(moveForceSprint);  
+            if (LeftTrackpadPressed == 1 && LeftTrackpadTouched == 1) MoveSphere(moveForceSprint);
         }
         if (jumping) {
             if (LeftTrackpadTouched == 0) StopSphere();
@@ -151,15 +151,13 @@ public class HexaBody : MonoBehaviour {
 
     private void StopSphere() {
         Sphere.GetComponent<Rigidbody>().angularDrag = angularBreakDrag;
-        if (Sphere.GetComponent<Rigidbody>().velocity == Vector3.zero) {
-            Sphere.GetComponent<Rigidbody>().freezeRotation = true;
-        }
+        if (Sphere.GetComponent<Rigidbody>().velocity == Vector3.zero) Sphere.GetComponent<Rigidbody>().freezeRotation = true;
     }
 
     // Jump
     private void Jump() {
         if (RightTrackpadPressed == 1 && RightTrackpad.y < 0) JumpSitDown();
-        if ((RightTrackpadPressed == 0) && jumping == true) JumpSitUp();
+        if (RightTrackpadPressed == 0 && jumping == true) JumpSitUp();
     }
 
     private void Ajust() {
