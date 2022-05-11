@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 
-public class HandPresence : MonoBehaviour {
+public class Hands : MonoBehaviour {
     public InputDeviceCharacteristics controllerCharacteristics;    
     private InputDevice targetDevice;
     public Animator handAnimator;
@@ -19,14 +19,13 @@ public class HandPresence : MonoBehaviour {
         List<InputDevice> devices = new List<InputDevice>();
 
         InputDevices.GetDevicesWithCharacteristics(controllerCharacteristics, devices);
-        if (devices.Count > 0)
-        {
+        if (devices.Count > 0) {
             targetDevice = devices[0];
         }
     }
 
     void UpdateHandAnimation() {
-        if(targetDevice.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue)) {
+        if (targetDevice.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue)) {
             handAnimator.SetFloat("Trigger", triggerValue);
         }
         else {
