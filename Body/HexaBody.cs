@@ -27,6 +27,8 @@ public class HexaBody : MonoBehaviour {
     public GameObject Chest;
     public GameObject Fender;
     public GameObject Sphere;
+    public GameObject RightHand;
+    public GameObject LeftHand;
 
     public ConfigurableJoint RightHandJoint;
     public ConfigurableJoint LeftHandJoint;
@@ -44,7 +46,7 @@ public class HexaBody : MonoBehaviour {
 
     [Header("Crouch and Jump")]
     public float crouchSpeed = 1.2f;
-    public float minCrouch = 0.1f;
+    public float minCrouch = 0.3f;
     public float maxCrouch = 1.8f;
     private float additionalHeight;
     public Vector3 crouchTarget;
@@ -60,6 +62,7 @@ public class HexaBody : MonoBehaviour {
     private Vector3 rightHandControllerPosition;
     private Vector3 leftHandControllerPosition;
 
+    private Quaternion cameraControllerRotation;
     private Quaternion rightHandControllerRotation;
     private Quaternion leftHandControllerRotation;
 
@@ -76,10 +79,7 @@ public class HexaBody : MonoBehaviour {
 
     void Start() {
         additionalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
-       
     }
-
-    void Update() {}
 
     private void FixedUpdate() {
         GetControllerInputs();
@@ -109,6 +109,7 @@ public class HexaBody : MonoBehaviour {
 
         // Camera Inputs
         cameraControllerPosition = CameraController.positionAction.action.ReadValue<Vector3>();
+        cameraControllerRotation = CameraController.rotationAction.action.ReadValue<Quaternion>();
 
         // Values
         headYaw = Quaternion.Euler(0, XRRig.cameraGameObject.transform.eulerAngles.y, 0);
@@ -118,30 +119,31 @@ public class HexaBody : MonoBehaviour {
 
     // Camera and Rig stuff
     private void RigToBody() {
-        // Move Camera to Body
+        // Roomscale temporary
+        Body.transform.position = cameraControllerPosition;
         XRCamera.transform.position = Head.transform.position;
-        // Move Hands to Body
-        RightHandController.transform.position = rightHandControllerPosition;
-        LeftHandController.transform.position = leftHandControllerPosition;
-        // Move Rig to Body
         XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
     }
 
     // Movement
     private void MoveAndRotateBody() {
+        RotateBody();
+        MoveBody();
+    }
+
+    // Rotates Rig AND Body
+    private void RotateBody() {
+        if (RightTrackpadPressed == 1) return;
+        Head.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
+        XRRig.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.World);
+        Chest.transform.rotation = headYaw;
+    }
+
+    private void MoveBody() {
         if (LeftTrackpadTouched == 0) StopSphere();
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 0) MoveSphere(moveForceWalk);
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 1) MoveSphere(moveForceSprint);
         if (jumping && LeftTrackpadTouched == 1) MoveSphere(moveForceCrouch);
-
-        RotateBody();
-    }
-
-    private void RotateBody() {
-        if (RightTrackpadPressed == 1) return;
-        Head.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
-        XRRig.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
-        Chest.transform.rotation = headYaw;
     }
 
     private void MoveSphere(float force) {
@@ -157,7 +159,7 @@ public class HexaBody : MonoBehaviour {
 
     // Jump
     private void Jump() {
-        if (RightTrackpadPressed == 1 && RightTrackpad.y < 0) JumpSitDown();
+        if (RightTrackpadPressed == 1) JumpSitDown();
         if (RightTrackpadPressed == 0 && jumping == true) JumpSitUp();
     }
 
@@ -165,6 +167,9 @@ public class HexaBody : MonoBehaviour {
         jumping = true;
         crouchTarget.y -= crouchSpeed * Time.fixedDeltaTime;
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
+
+        // crouchTarget = new Vector3(0, minCrouch - additionalHeight, 0);
+        // Spine.targetPosition = crouchTarget;
     }
 
     private void JumpSitUp() {
@@ -182,6 +187,9 @@ public class HexaBody : MonoBehaviour {
     private void MoveAndRotateHands() {
         RightHandJoint.targetPosition = rightHandControllerPosition - cameraControllerPosition;
         LeftHandJoint.targetPosition = leftHandControllerPosition - cameraControllerPosition;
+
+        // RightHandJoint.targetPosition = rightHandControllerPosition;
+        // LeftHandJoint.targetPosition = leftHandControllerPosition;
 
         RightHandJoint.targetRotation = rightHandControllerRotation;
         LeftHandJoint.targetRotation = leftHandControllerRotation;
