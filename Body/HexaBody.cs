@@ -8,6 +8,7 @@ using UnityEngine.InputSystem;
 
 public class HexaBody : MonoBehaviour {
     [Header("XR Rig")]
+    public GameObject PlayerController;
     public XRRig XRRig;
     public GameObject XRCamera;
 
@@ -53,6 +54,7 @@ public class HexaBody : MonoBehaviour {
     public Vector3 crouchTarget;
 
     bool jumping = false;
+    bool moving = false;
 
     // Input
     private Quaternion headYaw;
@@ -75,6 +77,8 @@ public class HexaBody : MonoBehaviour {
 
     private float RightTrackpadTouched;
     private float LeftTrackpadTouched;
+
+    private Vector3 bodyOffset;
 
     void Start() {
         additionalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
@@ -119,8 +123,8 @@ public class HexaBody : MonoBehaviour {
     // Camera and Rig stuff
     private void RigToBody() {
         // Roomscale temporary
-        // Body.transform.position = cameraControllerPosition;
-        // XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
+        Body.transform.position = cameraControllerPosition;
+        XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
     }
 
     // Movement
@@ -132,8 +136,9 @@ public class HexaBody : MonoBehaviour {
     // Rotates Rig AND Body
     private void RotateBody() {
         if (RightTrackpadPressed == 1) return;
-        Head.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
-        XRRig.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
+        // Head.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
+        // XRRig.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
+        PlayerController.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
         Chest.transform.rotation = headYaw;
     }
     
@@ -143,6 +148,7 @@ public class HexaBody : MonoBehaviour {
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 0) MoveSphere(moveForceWalk);
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 1) MoveSphere(moveForceSprint);
         if (jumping && LeftTrackpadTouched == 1) MoveSphere(moveForceCrouch);
+        if (moving == true) PlayerController.transform.position = XRRig.transform.position;
     }
 
     // Add torque to sphere for body movement
@@ -150,12 +156,14 @@ public class HexaBody : MonoBehaviour {
         Sphere.GetComponent<Rigidbody>().freezeRotation = false;
         Sphere.GetComponent<Rigidbody>().angularDrag = angularDragOnMove;
         Sphere.GetComponent<Rigidbody>().AddTorque(sphereTorque.normalized * (force * 2), ForceMode.Force);
+        moving = true;
     }
 
     // Stops sphere and freezes its rotation
     private void StopSphere() {
         Sphere.GetComponent<Rigidbody>().angularDrag = angularBreakDrag;
         if (Sphere.GetComponent<Rigidbody>().velocity == Vector3.zero) Sphere.GetComponent<Rigidbody>().freezeRotation = true;
+        moving = false;
     }
 
     // Jump
