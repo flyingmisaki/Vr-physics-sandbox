@@ -11,6 +11,8 @@ public class HexaBody : MonoBehaviour {
     public GameObject PlayerController;
     public XRRig XRRig;
     public GameObject XRCamera;
+    public GameObject CameraOffset;
+    public GameObject OffsetBody;
 
     [Header("Controllers")]
     public ActionBasedController CameraController;
@@ -124,7 +126,7 @@ public class HexaBody : MonoBehaviour {
     private void RigToBody() {
         // Roomscale temporary
         Body.transform.position = cameraControllerPosition;
-        XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
+        // XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
     }
 
     // Movement
@@ -136,9 +138,9 @@ public class HexaBody : MonoBehaviour {
     // Rotates Rig AND Body
     private void RotateBody() {
         if (RightTrackpadPressed == 1) return;
-        // Head.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
-        // XRRig.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
-        PlayerController.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
+        Body.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
+        // XRRig.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.World);
+        CameraOffset.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
         Chest.transform.rotation = headYaw;
     }
     
@@ -148,7 +150,6 @@ public class HexaBody : MonoBehaviour {
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 0) MoveSphere(moveForceWalk);
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 1) MoveSphere(moveForceSprint);
         if (jumping && LeftTrackpadTouched == 1) MoveSphere(moveForceCrouch);
-        if (moving == true) PlayerController.transform.position = XRRig.transform.position;
     }
 
     // Add torque to sphere for body movement
