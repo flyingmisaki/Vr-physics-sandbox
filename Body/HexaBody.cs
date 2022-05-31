@@ -88,13 +88,21 @@ public class HexaBody : MonoBehaviour {
 
     private void FixedUpdate() {
         GetControllerInputs();
-        RigToBody();
-        MoveAndRotateBody();
+        CalculateValues();
         MoveAndRotateHands();
+        MoveAndRotateBody();
+        RigToBody();
         Jump();
         if (!jumping) PhysicalCrouch();
+        Debugs();
     }
 
+    private void Debugs() {
+        Debug.Log("Jumping: "+ jumping);
+        Debug.Log("Moving: "+ moving);
+    }
+
+    // Gets controller inputs
     private void GetControllerInputs() {
         // Right Controller Position & Rotation
         rightHandControllerPosition = RightHandController.positionAction.action.ReadValue<Vector3>();
@@ -115,18 +123,23 @@ public class HexaBody : MonoBehaviour {
         // Camera Inputs
         cameraControllerPosition = CameraController.positionAction.action.ReadValue<Vector3>();
         cameraControllerRotation = CameraController.rotationAction.action.ReadValue<Quaternion>();
+    }
 
+    // Calculates body and movement values
+    private void CalculateValues() {
         // Values
         headYaw = Quaternion.Euler(0, XRRig.cameraGameObject.transform.eulerAngles.y, 0);
         moveDirection = headYaw * new Vector3(LeftTrackpad.x, 0, LeftTrackpad.y);
         sphereTorque = new Vector3(moveDirection.z, 0, -moveDirection.x);
+        bodyOffset = Fender.transform.position - XRRig.transform.position;
     }
 
     // Camera and Rig stuff
     private void RigToBody() {
-        // Roomscale temporary
-        Body.transform.position = cameraControllerPosition;
-        // XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
+        // Roomscale
+        Head.transform.position = new Vector3(CameraController.transform.position.x, Head.transform.position.y, CameraController.transform.position.z);
+        XRCamera.transform.rotation = CameraController.transform.rotation;
+        if (moving == true) XRRig.transform.position = Fender.transform.position - bodyOffset;
     }
 
     // Movement
@@ -138,9 +151,8 @@ public class HexaBody : MonoBehaviour {
     // Rotates Rig AND Body
     private void RotateBody() {
         if (RightTrackpadPressed == 1) return;
-        Body.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
-        // XRRig.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.World);
-        CameraOffset.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
+        Head.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
+        XRRig.transform.RotateAround(Head.transform.position, Vector3.up, RightTrackpad.x * turnSpeed);
         Chest.transform.rotation = headYaw;
     }
     
@@ -150,14 +162,15 @@ public class HexaBody : MonoBehaviour {
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 0) MoveSphere(moveForceWalk);
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 1) MoveSphere(moveForceSprint);
         if (jumping && LeftTrackpadTouched == 1) MoveSphere(moveForceCrouch);
+
     }
 
     // Add torque to sphere for body movement
     private void MoveSphere(float force) {
         Sphere.GetComponent<Rigidbody>().freezeRotation = false;
+        moving = true;
         Sphere.GetComponent<Rigidbody>().angularDrag = angularDragOnMove;
         Sphere.GetComponent<Rigidbody>().AddTorque(sphereTorque.normalized * (force * 2), ForceMode.Force);
-        moving = true;
     }
 
     // Stops sphere and freezes its rotation
@@ -193,13 +206,10 @@ public class HexaBody : MonoBehaviour {
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
+    // Moves and rotates hands with a target
     private void MoveAndRotateHands() {
         RightHandJoint.targetPosition = rightHandControllerPosition - cameraControllerPosition;
         LeftHandJoint.targetPosition = leftHandControllerPosition - cameraControllerPosition;
-
-        // RightHandJoint.targetPosition = rightHandControllerPosition;
-        // LeftHandJoint.targetPosition = leftHandControllerPosition;
-
         RightHandJoint.targetRotation = rightHandControllerRotation;
         LeftHandJoint.targetRotation = leftHandControllerRotation;
     }
