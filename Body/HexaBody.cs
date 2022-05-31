@@ -100,6 +100,7 @@ public class HexaBody : MonoBehaviour {
     private void Debugs() {
         Debug.Log("Jumping: "+ jumping);
         Debug.Log("Moving: "+ moving);
+        Debug.Log("BODY OFFSET: "+ bodyOffset.x);
     }
 
     // Gets controller inputs
@@ -128,10 +129,10 @@ public class HexaBody : MonoBehaviour {
     // Calculates body and movement values
     private void CalculateValues() {
         // Values
-        headYaw = Quaternion.Euler(0, XRRig.cameraGameObject.transform.eulerAngles.y, 0);
+        headYaw = Quaternion.Euler(0, XRCamera.transform.eulerAngles.y, 0);
         moveDirection = headYaw * new Vector3(LeftTrackpad.x, 0, LeftTrackpad.y);
         sphereTorque = new Vector3(moveDirection.z, 0, -moveDirection.x);
-        bodyOffset = Fender.transform.position - XRRig.transform.position;
+        bodyOffset = Sphere.transform.position - XRRig.transform.position;
     }
 
     // Camera and Rig stuff
@@ -139,7 +140,6 @@ public class HexaBody : MonoBehaviour {
         // Roomscale
         Head.transform.position = new Vector3(CameraController.transform.position.x, Head.transform.position.y, CameraController.transform.position.z);
         XRCamera.transform.rotation = CameraController.transform.rotation;
-        if (moving == true) XRRig.transform.position = Fender.transform.position - bodyOffset;
     }
 
     // Movement
@@ -162,7 +162,6 @@ public class HexaBody : MonoBehaviour {
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 0) MoveSphere(moveForceWalk);
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 1) MoveSphere(moveForceSprint);
         if (jumping && LeftTrackpadTouched == 1) MoveSphere(moveForceCrouch);
-
     }
 
     // Add torque to sphere for body movement
