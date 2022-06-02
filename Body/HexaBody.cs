@@ -38,9 +38,9 @@ public class HexaBody : MonoBehaviour {
 
     [Header("Movement")]
     public float turnSpeed = 3;
-    public float moveForceCrouch = 15;
-    public float moveForceWalk = 30;
-    public float moveForceSprint = 45;
+    public float moveForceCrouch = 10;
+    public float moveForceWalk = 25;
+    public float moveForceSprint = 40;
 
     [Header("Drag")]
     public float angularDragOnMove = 40;
@@ -49,7 +49,7 @@ public class HexaBody : MonoBehaviour {
     [Header("Crouch and Jump")]
     public float crouchSpeed = 1f;
     public float jumpSpeed = 1.2f;
-    public float minCrouch = 0.3f;
+    public float minCrouch = 0.1f;
     public float maxCrouch = 1.8f;
     private float additionalHeight;
     public Vector3 crouchTarget;
@@ -205,7 +205,7 @@ public class HexaBody : MonoBehaviour {
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
-    // Physical crouch
+    // Physical crouch dictated by head height
     private void PhysicalCrouch() {
         crouchTarget.y = Mathf.Clamp(cameraControllerPosition.y - additionalHeight, minCrouch, maxCrouch - additionalHeight);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
