@@ -54,8 +54,10 @@ public class HexaBody : MonoBehaviour {
     private float additionalHeight;
     public Vector3 crouchTarget;
 
-    bool jumping = false;
-    bool moving = false;
+    private bool jumping = false;
+    private bool moving = false;
+    private bool climbing = false;
+    private Vector3 climbingInitialPosition;
 
     // Input
     private Vector3 cameraControllerPosition;
@@ -78,7 +80,6 @@ public class HexaBody : MonoBehaviour {
     private Quaternion headYaw;
     private Vector3 moveDirection;
     private Vector3 sphereTorque;
-    private Vector3 bodyOffset;
 
     void Start() {
         additionalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
@@ -94,17 +95,18 @@ public class HexaBody : MonoBehaviour {
         Jump();
         if (!jumping) PhysicalCrouch();
         // Debugs();
+        Debug.Log(Body.transform.position);
     }
 
     private void Debugs() {
-        Debug.Log("Jumping: "+ jumping);
-        Debug.Log("Moving: "+ moving);
-        Debug.Log("BODY OFFSET: "+ bodyOffset);
+        Debug.Log("Jumping: " + jumping);
+        Debug.Log("Moving: " + moving);
+        Debug.Log("Climbing: " + climbing);
     }
 
     // Gets controller inputs
     private void GetControllerInputs() {
-        // Right Controller Position & Rotation
+        // Right controller position & rotation
         rightHandControllerPosition = RightHandController.positionAction.action.ReadValue<Vector3>();
         rightHandControllerRotation = RightHandController.rotationAction.action.ReadValue<Quaternion>();
         // Trackpad
@@ -112,7 +114,7 @@ public class HexaBody : MonoBehaviour {
         RightTrackpadPressed = RightTrackPadPress.action.ReadValue<float>();
         RightTrackpadTouched = RightTrackPadTouch.action.ReadValue<float>();
 
-        // Left Contoller Position & Rotation
+        // Left contoller position & rotation
         leftHandControllerPosition = LeftHandController.positionAction.action.ReadValue<Vector3>();
         leftHandControllerRotation = LeftHandController.rotationAction.action.ReadValue<Quaternion>();
         // Trackpad
@@ -120,7 +122,7 @@ public class HexaBody : MonoBehaviour {
         LeftTrackpadPressed = LeftTrackPadPress.action.ReadValue<float>();
         LeftTrackpadTouched = LeftTrackPadTouch.action.ReadValue<float>();
 
-        // Camera Inputs
+        // Headset controller position & rotation
         cameraControllerPosition = CameraController.positionAction.action.ReadValue<Vector3>();
         cameraControllerRotation = CameraController.rotationAction.action.ReadValue<Quaternion>();
     }
@@ -131,16 +133,40 @@ public class HexaBody : MonoBehaviour {
         headYaw = Quaternion.Euler(0, XRCamera.transform.eulerAngles.y, 0);
         moveDirection = headYaw * new Vector3(LeftTrackpad.x, 0, LeftTrackpad.y);
         sphereTorque = new Vector3(moveDirection.z, 0, -moveDirection.x);
-        // bodyOffset.x = Body.transform.position.x - XRRig.transform.position.x;
-        // bodyOffset.z = Body.transform.position.z - XRRig.transform.position.z;
+        
+        bool wasClimbing = climbing;
+        climbing = RightHand.GetComponent<ClimbingHand>().climbing || LeftHand.GetComponent<ClimbingHand>().climbing;
+        
+        // On start climbing
+        if (!wasClimbing && climbing) {
+            climbingInitialPosition = Body.transform.position;
+        }
+
+        // On stop climbing
+        if (wasClimbing && !climbing) {
+            Vector3 climbingEndPosition = Body.transform.position;
+            Vector3 positionDelta = climbingEndPosition - climbingInitialPosition;
+            Debug.Log("Start: " + climbingInitialPosition);
+            Debug.Log("End: " + climbingEndPosition);
+            Debug.Log("Delta: " + positionDelta);
+            XRRig.transform.position -= positionDelta;
+            climbingEndPosition = Vector3.zero;
+        }
     }
 
     // Camera and Rig stuff
     private void RigToBody() {
         // Roomscale
-        Body.transform.position = new Vector3(CameraController.transform.position.x, Body.transform.position.y, CameraController.transform.position.z);
-        XRCamera.transform.rotation = CameraController.transform.rotation;
-
+        if (climbing == false) {
+            Body.transform.position = new Vector3(CameraController.transform.position.x, Body.transform.position.y, CameraController.transform.position.z);
+            XRCamera.transform.rotation = CameraController.transform.rotation;
+        }
+        // No Roomscale while climbing
+        if (climbing == true) {
+            Body.transform.position = new Vector3(Body.transform.position.x, Body.transform.position.y, Body.transform.position.z);
+            XRCamera.transform.rotation = CameraController.transform.rotation;
+        }
+        
         // Body.transform.position = cameraControllerPosition;
         // XRCamera.transform.position = Head.transform.position;
         // XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
@@ -156,13 +182,13 @@ public class HexaBody : MonoBehaviour {
     private void RotateBody() {
         if (RightTrackpadPressed == 1) return;
         Head.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
-        // Body.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
-        // PlayerController.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
         XRRig.transform.RotateAround(Body.transform.position, Vector3.up, RightTrackpad.x * turnSpeed);
+
         Chest.transform.rotation = headYaw;
+        Fender.transform.rotation = headYaw;
     }
     
-    // Sphere control
+    // Sphere control on input
     private void MoveBody() {
         if (LeftTrackpadTouched == 0) StopSphere();
         if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 0) MoveSphere(moveForceWalk);
@@ -185,7 +211,7 @@ public class HexaBody : MonoBehaviour {
         moving = false;
     }
 
-    // Jump
+    // Jump control on input
     private void Jump() {
         if (RightTrackpadPressed == 1) JumpPreload();
         if (RightTrackpadPressed == 0 && jumping == true) JumpRelease();
