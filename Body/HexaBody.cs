@@ -47,19 +47,13 @@ public class HexaBody : MonoBehaviour {
     public float angularBreakDrag = 100;
 
     [Header("Crouch and Jump")]
-    public float crouchSpeed = 1f;
-    public float jumpSpeed = 1.2f;
+    public float jumpPreloadForce = 1f;
+    public float jumpReleaseForce = 1.2f;
     public float minCrouch = 0.1f;
     public float maxCrouch = 1.8f;
-    private float additionalHeight;
     public Vector3 crouchTarget;
 
-    private bool jumping = false;
-    private bool moving = false;
-    private bool climbing = false;
-    private Vector3 climbingInitialPosition;
-
-    // Input
+    // Input fields
     private Vector3 cameraControllerPosition;
     private Vector3 rightHandControllerPosition;
     private Vector3 leftHandControllerPosition;
@@ -68,21 +62,30 @@ public class HexaBody : MonoBehaviour {
     private Quaternion rightHandControllerRotation;
     private Quaternion leftHandControllerRotation;
 
-    private Vector2 RightTrackpad;
-    private Vector2 LeftTrackpad;
+    private Vector2 rightTrackpadValue;
+    private Vector2 leftTrackpadValue;
 
-    private float RightTrackpadPressed;
-    private float LeftTrackpadPressed;
+    private float rightTrackpadPressed;
+    private float leftTrackpadPressed;
+    private float rightTrackpadTouched;
+    private float leftTrackpadTouched;
 
-    private float RightTrackpadTouched;
-    private float LeftTrackpadTouched;
+    // Body fields
+    private bool jumping = false;
+    private bool moving = false;
+    private bool climbing = false;
+    
+    private float originalHeight;
+    private float additionnalCrouchHeight = 0;
+    private Vector3 climbingInitialPosition;
 
     private Quaternion headYaw;
     private Vector3 moveDirection;
     private Vector3 sphereTorque;
 
+    // On script start
     void Start() {
-        additionalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
+        originalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
     }
 
     // On every physics update
@@ -93,9 +96,8 @@ public class HexaBody : MonoBehaviour {
         MoveAndRotateBody();
         RigToBody();
         Jump();
-        if (!jumping) PhysicalCrouch();
+        if (!jumping) Crouch();
         // Debugs();
-        Debug.Log(Body.transform.position);
     }
 
     private void Debugs() {
@@ -109,18 +111,18 @@ public class HexaBody : MonoBehaviour {
         // Right controller position & rotation
         rightHandControllerPosition = RightHandController.positionAction.action.ReadValue<Vector3>();
         rightHandControllerRotation = RightHandController.rotationAction.action.ReadValue<Quaternion>();
-        // Trackpad
-        RightTrackpad = RightHandController.translateAnchorAction.action.ReadValue<Vector2>();
-        RightTrackpadPressed = RightTrackPadPress.action.ReadValue<float>();
-        RightTrackpadTouched = RightTrackPadTouch.action.ReadValue<float>();
+        // Right trackpad value, press and touch
+        rightTrackpadValue = RightHandController.translateAnchorAction.action.ReadValue<Vector2>();
+        rightTrackpadPressed = RightTrackPadPress.action.ReadValue<float>();
+        rightTrackpadTouched = RightTrackPadTouch.action.ReadValue<float>();
 
         // Left contoller position & rotation
         leftHandControllerPosition = LeftHandController.positionAction.action.ReadValue<Vector3>();
         leftHandControllerRotation = LeftHandController.rotationAction.action.ReadValue<Quaternion>();
-        // Trackpad
-        LeftTrackpad = LeftHandController.translateAnchorAction.action.ReadValue<Vector2>();
-        LeftTrackpadPressed = LeftTrackPadPress.action.ReadValue<float>();
-        LeftTrackpadTouched = LeftTrackPadTouch.action.ReadValue<float>();
+        // Left trackpad value, press and touch
+        leftTrackpadValue = LeftHandController.translateAnchorAction.action.ReadValue<Vector2>();
+        leftTrackpadPressed = LeftTrackPadPress.action.ReadValue<float>();
+        leftTrackpadTouched = LeftTrackPadTouch.action.ReadValue<float>();
 
         // Headset controller position & rotation
         cameraControllerPosition = CameraController.positionAction.action.ReadValue<Vector3>();
@@ -131,7 +133,7 @@ public class HexaBody : MonoBehaviour {
     private void CalculateValues() {
         // Values
         headYaw = Quaternion.Euler(0, XRCamera.transform.eulerAngles.y, 0);
-        moveDirection = headYaw * new Vector3(LeftTrackpad.x, 0, LeftTrackpad.y);
+        moveDirection = headYaw * new Vector3(leftTrackpadValue.x, 0, leftTrackpadValue.y);
         sphereTorque = new Vector3(moveDirection.z, 0, -moveDirection.x);
         
         bool wasClimbing = climbing;
@@ -146,9 +148,9 @@ public class HexaBody : MonoBehaviour {
         if (wasClimbing && !climbing) {
             Vector3 climbingEndPosition = Body.transform.position;
             Vector3 positionDelta = climbingEndPosition - climbingInitialPosition;
-            Debug.Log("Start: " + climbingInitialPosition);
-            Debug.Log("End: " + climbingEndPosition);
-            Debug.Log("Delta: " + positionDelta);
+            // Debug.Log("Start: " + climbingInitialPosition);
+            // Debug.Log("End: " + climbingEndPosition);
+            // Debug.Log("Delta: " + positionDelta);
             XRRig.transform.position -= positionDelta;
             climbingEndPosition = Vector3.zero;
         }
@@ -180,9 +182,9 @@ public class HexaBody : MonoBehaviour {
 
     // Rotates Rig AND Body
     private void RotateBody() {
-        if (RightTrackpadPressed == 1) return;
-        Head.transform.Rotate(0, RightTrackpad.x * turnSpeed, 0, Space.Self);
-        XRRig.transform.RotateAround(Body.transform.position, Vector3.up, RightTrackpad.x * turnSpeed);
+        if (rightTrackpadPressed == 1) return;
+        Head.transform.Rotate(0, rightTrackpadValue.x * turnSpeed, 0, Space.Self);
+        XRRig.transform.RotateAround(Body.transform.position, Vector3.up, rightTrackpadValue.x * turnSpeed);
 
         Chest.transform.rotation = headYaw;
         Fender.transform.rotation = headYaw;
@@ -190,10 +192,10 @@ public class HexaBody : MonoBehaviour {
     
     // Sphere control on input
     private void MoveBody() {
-        if (LeftTrackpadTouched == 0) StopSphere();
-        if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 0) MoveSphere(moveForceWalk);
-        if (LeftTrackpadTouched == 1 && LeftTrackpadPressed == 1) MoveSphere(moveForceSprint);
-        if (jumping && LeftTrackpadTouched == 1) MoveSphere(moveForceCrouch);
+        if (leftTrackpadTouched == 0) StopSphere();
+        if (leftTrackpadTouched == 1 && leftTrackpadPressed == 0) MoveSphere(moveForceWalk);
+        if (leftTrackpadTouched == 1 && leftTrackpadPressed == 1) MoveSphere(moveForceSprint);
+        if (jumping && leftTrackpadTouched == 1) MoveSphere(moveForceCrouch);
     }
 
     // Add torque to sphere for body movement
@@ -201,7 +203,7 @@ public class HexaBody : MonoBehaviour {
         Sphere.GetComponent<Rigidbody>().freezeRotation = false;
         moving = true;
         Sphere.GetComponent<Rigidbody>().angularDrag = angularDragOnMove;
-        Sphere.GetComponent<Rigidbody>().AddTorque(sphereTorque.normalized * (force * 2), ForceMode.Force);
+        Sphere.GetComponent<Rigidbody>().AddTorque(sphereTorque * (force * 2), ForceMode.Force);
     }
 
     // Stops sphere and freezes its rotation
@@ -213,27 +215,39 @@ public class HexaBody : MonoBehaviour {
 
     // Jump control on input
     private void Jump() {
-        if (RightTrackpadPressed == 1) JumpPreload();
-        if (RightTrackpadPressed == 0 && jumping == true) JumpRelease();
+        if (rightTrackpadPressed == 1) JumpPreload();
+        if (rightTrackpadPressed == 0 && jumping == true) JumpRelease();
     }
 
     // Virtual crouch for jump
     private void JumpPreload() {
         jumping = true;
-        crouchTarget.y = Mathf.Clamp(crouchTarget.y -= crouchSpeed * Time.fixedDeltaTime, minCrouch, maxCrouch);
+        crouchTarget.y = Mathf.Clamp(crouchTarget.y -= jumpPreloadForce * Time.fixedDeltaTime, minCrouch, maxCrouch);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
     // Virtual crouch release for jump
     private void JumpRelease() {
         jumping = false;
-        crouchTarget.y = Mathf.Clamp(crouchTarget.y += jumpSpeed * Time.fixedDeltaTime, minCrouch, maxCrouch);
+        crouchTarget.y = Mathf.Clamp(crouchTarget.y += jumpReleaseForce * Time.fixedDeltaTime, minCrouch, maxCrouch);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
+    }
+
+    // Crouch control on input + physical crouch
+    private void Crouch() {
+        PhysicalCrouch();
+        // VirtualCrouch();
+    }
+
+    // Virtual Crouch based on stick value
+    private void VirtualCrouch() {
+        // crouchTarget.y = Mathf.Clamp(crouchTarget.y -= 0.8f * Time.fixedDeltaTime, minCrouch, maxCrouch - originalHeight);
+        // Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
     // Physical crouch dictated by head height
     private void PhysicalCrouch() {
-        crouchTarget.y = Mathf.Clamp(cameraControllerPosition.y - additionalHeight, minCrouch, maxCrouch - additionalHeight);
+        crouchTarget.y = Mathf.Clamp(cameraControllerPosition.y - originalHeight, minCrouch, maxCrouch - originalHeight);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
