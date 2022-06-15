@@ -49,6 +49,7 @@ public class HexaBody : MonoBehaviour {
     [Header("Crouch and Jump")]
     public float jumpPreloadForce = 1f;
     public float jumpReleaseForce = 1.2f;
+    public float jumpMinCrouch = 0.15f;
     public float minCrouch = 0.1f;
     public float maxCrouch = 1.8f;
     public Vector3 crouchTarget;
@@ -222,14 +223,14 @@ public class HexaBody : MonoBehaviour {
     // Virtual crouch for jump
     private void JumpPreload() {
         jumping = true;
-        crouchTarget.y = Mathf.Clamp(crouchTarget.y -= jumpPreloadForce * Time.fixedDeltaTime, minCrouch, maxCrouch);
+        crouchTarget.y = Mathf.Clamp(crouchTarget.y -= jumpPreloadForce * Time.fixedDeltaTime, jumpMinCrouch, maxCrouch);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
     // Virtual crouch release for jump
     private void JumpRelease() {
         jumping = false;
-        crouchTarget.y = Mathf.Clamp(crouchTarget.y += jumpReleaseForce * Time.fixedDeltaTime, minCrouch, maxCrouch);
+        crouchTarget.y = Mathf.Clamp(crouchTarget.y += jumpReleaseForce * Time.fixedDeltaTime, jumpMinCrouch, maxCrouch);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
