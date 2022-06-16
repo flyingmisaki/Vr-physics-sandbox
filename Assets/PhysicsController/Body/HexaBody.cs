@@ -74,7 +74,6 @@ public class HexaBody : MonoBehaviour {
     // Body fields
     private bool jumping = false;
     private bool moving = false;
-    private bool climbing = false;
     
     private float originalHeight;
     private float additionnalCrouchHeight = 0;
@@ -104,7 +103,7 @@ public class HexaBody : MonoBehaviour {
     private void Debugs() {
         Debug.Log("Jumping: " + jumping);
         Debug.Log("Moving: " + moving);
-        Debug.Log("Climbing: " + climbing);
+        // Debug.Log("Climbing: " + climbing);
     }
 
     // Gets controller inputs
@@ -136,39 +135,13 @@ public class HexaBody : MonoBehaviour {
         headYaw = Quaternion.Euler(0, XRCamera.transform.eulerAngles.y, 0);
         moveDirection = headYaw * new Vector3(leftTrackpadValue.x, 0, leftTrackpadValue.y);
         sphereTorque = new Vector3(moveDirection.z, 0, -moveDirection.x);
-        
-        bool wasClimbing = climbing;
-        climbing = RightHand.GetComponent<ClimbingHand>().climbing || LeftHand.GetComponent<ClimbingHand>().climbing;
-        
-        // On start climbing
-        if (!wasClimbing && climbing) {
-            climbingInitialPosition = Body.transform.position;
-        }
-
-        // On stop climbing
-        if (wasClimbing && !climbing) {
-            Vector3 climbingEndPosition = Body.transform.position;
-            Vector3 positionDelta = climbingEndPosition - climbingInitialPosition;
-            // Debug.Log("Start: " + climbingInitialPosition);
-            // Debug.Log("End: " + climbingEndPosition);
-            // Debug.Log("Delta: " + positionDelta);
-            XRRig.transform.position -= positionDelta;
-            climbingEndPosition = Vector3.zero;
-        }
     }
 
     // Camera and Rig stuff
     private void RigToBody() {
         // Roomscale
-        if (climbing == false) {
-            Body.transform.position = new Vector3(CameraController.transform.position.x, Body.transform.position.y, CameraController.transform.position.z);
-            XRCamera.transform.rotation = CameraController.transform.rotation;
-        }
-        // No Roomscale while climbing
-        if (climbing == true) {
-            Body.transform.position = new Vector3(Body.transform.position.x, Body.transform.position.y, Body.transform.position.z);
-            XRCamera.transform.rotation = CameraController.transform.rotation;
-        }
+        Body.transform.position = new Vector3(CameraController.transform.position.x, Body.transform.position.y, CameraController.transform.position.z);
+        XRCamera.transform.rotation = CameraController.transform.rotation;
         
         // Body.transform.position = cameraControllerPosition;
         // XRCamera.transform.position = Head.transform.position;

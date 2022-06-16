@@ -1,0 +1,57 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEditor.XR.LegacyInputHelpers;
+using UnityEngine.XR;
+using UnityEngine.InputSystem;
+
+// Describes grabbing for holding objects and climbing
+public class GrabbingHand : MonoBehaviour {
+    [Header("Action")]
+    public InputActionReference ControllerSelect;
+    [Header("Release Delay")]
+    public float releaseDelay = 300;
+    
+    // Input fields
+    private float ControllerSelected;
+    
+    // Grab fiels
+    private FixedJoint joint = null;
+    private bool attached = false;
+
+    // On every physics tick
+    void FixedUpdate() {
+        GetInput();
+        if (ControllerSelected == 0 && attached) Release();
+    }
+
+    // Get controller inputs
+    void GetInput() {
+        ControllerSelected = ControllerSelect.action.ReadValue<float>();
+    }
+
+    // Creates and attaches joint at collision points of contact and stops propagation to other gameobjects
+    void Attach(Collision collision) {
+        attached = true;
+        joint = gameObject.AddComponent<FixedJoint>(); 
+        joint.anchor = collision.contacts[0].point; 
+        joint.connectedBody = collision.contacts[0].otherCollider.transform.GetComponentInParent<Rigidbody>(); 
+        joint.enableCollision = false;
+    }
+
+    // Destroys joint set up by attach
+    void Release() {
+        Destroy(joint);
+        joint = null;
+        attached = false;
+        gameObject.GetComponent<Hands>().EnableHandColliderDelay(releaseDelay);
+    }
+
+    // Calls Attach() on collision & on input
+    void OnCollisionEnter(Collision collision) {
+        if (collision.gameObject.tag == "Grabbable" && !attached && ControllerSelected == 1) {
+            Attach(collision);
+        }
+    }
+}
