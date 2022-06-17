@@ -7,6 +7,7 @@ using UnityEngine.XR;
 using UnityEngine.InputSystem;
 
 public class HexaBody : MonoBehaviour {
+    // Public inspector fields
     [Header("XR Rig")]
     public GameObject PlayerController;
     public XRRig XRRig;
@@ -50,6 +51,7 @@ public class HexaBody : MonoBehaviour {
     public float jumpPreloadForce = 1f;
     public float jumpReleaseForce = 1.2f;
     public float jumpMinCrouch = 0.15f;
+    public float crouchForce = 1f;
     public float minCrouch = 0.1f;
     public float maxCrouch = 1.8f;
     public Vector3 crouchTarget;
@@ -76,7 +78,6 @@ public class HexaBody : MonoBehaviour {
     private bool moving = false;
     
     private float originalHeight;
-    private float additionnalCrouchHeight = 0;
     private Vector3 climbingInitialPosition;
 
     private Quaternion headYaw;
@@ -156,12 +157,11 @@ public class HexaBody : MonoBehaviour {
 
     // Rotates Rig AND Body
     private void RotateBody() {
+        Chest.transform.rotation = headYaw;
+        Fender.transform.rotation = headYaw;
         if (rightTrackpadPressed == 1) return;
         Head.transform.Rotate(0, rightTrackpadValue.x * turnSpeed, 0, Space.Self);
         XRRig.transform.RotateAround(Body.transform.position, Vector3.up, rightTrackpadValue.x * turnSpeed);
-
-        Chest.transform.rotation = headYaw;
-        Fender.transform.rotation = headYaw;
     }
     
     // Sphere control on input
@@ -210,14 +210,18 @@ public class HexaBody : MonoBehaviour {
     // Crouch control on input + physical crouch
     private void Crouch() {
         PhysicalCrouch();
-        // VirtualCrouch();
+        // if (rightTrackpadValue < 0) VirtualCrouchDown();
+        // if (rightTrackpadValue > 0) VirtualCrouchUp();
     }
 
-    // Virtual Crouch based on stick value
-    private void VirtualCrouch() {
-        // crouchTarget.y = Mathf.Clamp(crouchTarget.y -= 0.8f * Time.fixedDeltaTime, minCrouch, maxCrouch - originalHeight);
-        // Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
-    }
+    // // Virtual Crouch based on stick value
+    // private void VirtualCrouchDown() {
+    //     crouchTarget.y -= crouchForce;
+    // }
+
+    // private void VirtualCrouchUp() {
+    //     crouchTarget.y += crouchForce;
+    // }
 
     // Physical crouch dictated by head height
     private void PhysicalCrouch() {

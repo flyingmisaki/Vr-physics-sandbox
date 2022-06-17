@@ -8,10 +8,13 @@ using UnityEngine.InputSystem;
 
 // Describes grabbing for holding objects and climbing
 public class GrabbingHand : MonoBehaviour {
+    // Public inspector fields
     [Header("Action")]
     public InputActionReference ControllerSelect;
+    [Header("Hand")]
+    public GameObject Hand;
     [Header("Release Delay")]
-    public float releaseDelay = 300;
+    public float releaseDelay = 500f;
     
     // Input fields
     private float ControllerSelected;
@@ -49,8 +52,8 @@ public class GrabbingHand : MonoBehaviour {
     }
 
     // Calls Attach() on collision & on input
-    void OnCollisionEnter(Collision collision) {
-        if (collision.gameObject.tag == "Grabbable" && !attached && ControllerSelected == 1) {
+    void CollisionEntered(Collision collision) {
+        if (!attached && ControllerSelected == 1 && collision.gameObject.tag == "Grabbable") {
             Attach(collision);
         }
     }
