@@ -210,18 +210,14 @@ public class HexaBody : MonoBehaviour {
     // Crouch control on input + physical crouch
     private void Crouch() {
         PhysicalCrouch();
-        // if (rightTrackpadValue < 0) VirtualCrouchDown();
-        // if (rightTrackpadValue > 0) VirtualCrouchUp();
+        VirtualCrouch();
     }
 
-    // // Virtual Crouch based on stick value
-    // private void VirtualCrouchDown() {
-    //     crouchTarget.y -= crouchForce;
-    // }
-
-    // private void VirtualCrouchUp() {
-    //     crouchTarget.y += crouchForce;
-    // }
+    // Virtual crouch for height ajust
+    private void VirtualCrouch() {
+        crouchTarget.y = Mathf.Clamp(crouchTarget.y * rightTrackpadValue.y, minCrouch, maxCrouch);
+        Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
+    }
 
     // Physical crouch dictated by head height
     private void PhysicalCrouch() {
