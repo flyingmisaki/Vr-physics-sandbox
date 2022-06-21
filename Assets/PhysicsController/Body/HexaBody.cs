@@ -49,9 +49,9 @@ public class HexaBody : MonoBehaviour {
 
     [Header("Crouch and Jump")]
     public float jumpPreloadForce = 1f;
-    public float jumpReleaseForce = 1.2f;
+    public float jumpReleaseForce = 1.25f;
     public float jumpMinCrouch = 0.15f;
-    public float crouchForce = 1f;
+    public float crouchForce = 0.5f;
     public float minCrouch = 0.1f;
     public float maxCrouch = 1.8f;
     public Vector3 crouchTarget;
@@ -76,6 +76,7 @@ public class HexaBody : MonoBehaviour {
     // Body fields
     private bool jumping = false;
     private bool moving = false;
+    private bool crouching = false;
     
     private float originalHeight;
     private Vector3 climbingInitialPosition;
@@ -99,6 +100,7 @@ public class HexaBody : MonoBehaviour {
         Jump();
         if (!jumping) Crouch();
         // Debugs();
+        Debug.Log(rightTrackpadValue.y);
     }
 
     private void Debugs() {
@@ -160,8 +162,10 @@ public class HexaBody : MonoBehaviour {
         Chest.transform.rotation = headYaw;
         Fender.transform.rotation = headYaw;
         if (rightTrackpadPressed == 1) return;
-        Head.transform.Rotate(0, rightTrackpadValue.x * turnSpeed, 0, Space.Self);
-        XRRig.transform.RotateAround(Body.transform.position, Vector3.up, rightTrackpadValue.x * turnSpeed);
+        if (rightTrackpadValue.x > 0.25f || rightTrackpadValue.x < -0.25f) {
+            Head.transform.Rotate(0, rightTrackpadValue.x * turnSpeed, 0, Space.Self);
+            XRRig.transform.RotateAround(Body.transform.position, Vector3.up, rightTrackpadValue.x * turnSpeed);
+        }
     }
     
     // Sphere control on input
@@ -210,17 +214,29 @@ public class HexaBody : MonoBehaviour {
     // Crouch control on input + physical crouch
     private void Crouch() {
         PhysicalCrouch();
-        VirtualCrouch();
+        // if (rightTrackpadValue.y == 0.0f) PhysicalCrouch();
+        // if (rightTrackpadValue.y < -0.85f) VirtualCrouchDown();
+        // if (rightTrackpadValue.y > 0.85f) VirtualCrouchUp();
     }
 
     // Virtual crouch for height ajust
-    private void VirtualCrouch() {
-        crouchTarget.y = Mathf.Clamp(crouchTarget.y * rightTrackpadValue.y, minCrouch, maxCrouch);
+    private void VirtualCrouchUp() {
+        crouching = true;
+        crouchTarget.y = Mathf.Clamp(crouchTarget.y += crouchForce * Time.fixedDeltaTime, minCrouch, maxCrouch);
+        Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
+    }
+
+    // Virtual crouch for height ajust
+    private void VirtualCrouchDown() {
+        crouching = true;
+        // crouchTarget.y = Mathf.Clamp(crouchTarget.y -= crouchForce * Time.fixedDeltaTime, minCrouch, maxCrouch);
+        crouchTarget.y = Mathf.Clamp(crouchTarget.y += rightTrackpadValue.y * Time.fixedDeltaTime, minCrouch, maxCrouch);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
     // Physical crouch dictated by head height
     private void PhysicalCrouch() {
+        crouching = false;
         crouchTarget.y = Mathf.Clamp(cameraControllerPosition.y - originalHeight, minCrouch, maxCrouch - originalHeight);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }

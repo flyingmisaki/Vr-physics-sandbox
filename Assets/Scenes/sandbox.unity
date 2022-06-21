@@ -21486,7 +21486,7 @@ MonoBehaviour:
   jumpPreloadForce: 1
   jumpReleaseForce: 1.25
   jumpMinCrouch: 0.15
-  crouchForce: 1
+  crouchForce: 0.5
   minCrouch: 0
   maxCrouch: 1.8
   crouchTarget: {x: 0, y: 0, z: 0}
