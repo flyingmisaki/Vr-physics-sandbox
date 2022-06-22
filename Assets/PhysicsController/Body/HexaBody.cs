@@ -24,6 +24,9 @@ public class HexaBody : MonoBehaviour {
     public InputActionReference LeftTrackPadPress;
     public InputActionReference LeftTrackPadTouch;
 
+    public InputActionReference RightPrimaryPress;
+    public InputActionReference RightSecondaryPress;
+
     [Header("Hexabody")]
     public GameObject Body;
     public GameObject Head;
@@ -51,7 +54,7 @@ public class HexaBody : MonoBehaviour {
     public float jumpPreloadForce = 1f;
     public float jumpReleaseForce = 1.25f;
     public float jumpMinCrouch = 0.15f;
-    public float crouchForce = 0.5f;
+    public float crouchForce = 0.01f;
     public float minCrouch = 0.1f;
     public float maxCrouch = 1.8f;
     public Vector3 crouchTarget;
@@ -70,8 +73,13 @@ public class HexaBody : MonoBehaviour {
 
     private float rightTrackpadPressed;
     private float leftTrackpadPressed;
+
     private float rightTrackpadTouched;
     private float leftTrackpadTouched;
+
+    private float rightPrimaryPressed;
+
+    private float rightSecondaryPressed;
 
     // Body fields
     private bool jumping = false;
@@ -79,6 +87,7 @@ public class HexaBody : MonoBehaviour {
     private bool crouching = false;
     
     private float originalHeight;
+    private float additionalHeight;
     private Vector3 climbingInitialPosition;
 
     private Quaternion headYaw;
@@ -88,6 +97,7 @@ public class HexaBody : MonoBehaviour {
     // On script start
     void Start() {
         originalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
+        additionalHeight = originalHeight;
     }
 
     // On every physics update
@@ -100,13 +110,11 @@ public class HexaBody : MonoBehaviour {
         Jump();
         if (!jumping) Crouch();
         // Debugs();
-        Debug.Log(rightTrackpadValue.y);
     }
 
     private void Debugs() {
         Debug.Log("Jumping: " + jumping);
         Debug.Log("Moving: " + moving);
-        // Debug.Log("Climbing: " + climbing);
     }
 
     // Gets controller inputs
@@ -118,6 +126,9 @@ public class HexaBody : MonoBehaviour {
         rightTrackpadValue = RightHandController.translateAnchorAction.action.ReadValue<Vector2>();
         rightTrackpadPressed = RightTrackPadPress.action.ReadValue<float>();
         rightTrackpadTouched = RightTrackPadTouch.action.ReadValue<float>();
+        // Right primary and secondary press
+        rightPrimaryPressed = RightPrimaryPress.action.ReadValue<float>();
+        rightSecondaryPressed = RightSecondaryPress.action.ReadValue<float>();
 
         // Left contoller position & rotation
         leftHandControllerPosition = LeftHandController.positionAction.action.ReadValue<Vector3>();
@@ -146,6 +157,7 @@ public class HexaBody : MonoBehaviour {
         Body.transform.position = new Vector3(CameraController.transform.position.x, Body.transform.position.y, CameraController.transform.position.z);
         XRCamera.transform.rotation = CameraController.transform.rotation;
         
+        // No roomscale
         // Body.transform.position = cameraControllerPosition;
         // XRCamera.transform.position = Head.transform.position;
         // XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
@@ -193,8 +205,9 @@ public class HexaBody : MonoBehaviour {
 
     // Jump control on input
     private void Jump() {
-        if (rightTrackpadPressed == 1) JumpPreload();
-        if (rightTrackpadPressed == 0 && jumping == true) JumpRelease();
+        bool jumpButtonPressed = rightPrimaryPressed == 1 || rightTrackpadPressed == 1;
+        if (jumpButtonPressed) JumpPreload();
+        else if (jumping == true) JumpRelease();
     }
 
     // Virtual crouch for jump
@@ -211,33 +224,27 @@ public class HexaBody : MonoBehaviour {
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 
-    // Crouch control on input + physical crouch
+    // Crouch control
     private void Crouch() {
+        VirtualCrouch();
         PhysicalCrouch();
-        // if (rightTrackpadValue.y == 0.0f) PhysicalCrouch();
-        // if (rightTrackpadValue.y < -0.85f) VirtualCrouchDown();
-        // if (rightTrackpadValue.y > 0.85f) VirtualCrouchUp();
+        if (rightSecondaryPressed == 1) ResetCrouchHeight();
     }
 
-    // Virtual crouch for height ajust
-    private void VirtualCrouchUp() {
-        crouching = true;
-        crouchTarget.y = Mathf.Clamp(crouchTarget.y += crouchForce * Time.fixedDeltaTime, minCrouch, maxCrouch);
-        Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
+    // Resets height to originalHeight calculated at Start()
+    private void ResetCrouchHeight() {
+        additionalHeight = originalHeight;
     }
 
-    // Virtual crouch for height ajust
-    private void VirtualCrouchDown() {
-        crouching = true;
-        // crouchTarget.y = Mathf.Clamp(crouchTarget.y -= crouchForce * Time.fixedDeltaTime, minCrouch, maxCrouch);
-        crouchTarget.y = Mathf.Clamp(crouchTarget.y += rightTrackpadValue.y * Time.fixedDeltaTime, minCrouch, maxCrouch);
-        Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
+    // Additional height on input for virtual crouch 
+    private void VirtualCrouch() {
+        if (rightTrackpadValue.y < -0.75f) additionalHeight += crouchForce;
+        if (rightTrackpadValue.y > 0.75f) additionalHeight -= crouchForce;
     }
 
-    // Physical crouch dictated by head height
+    // Physical crouch dictated by head height and additional height based on virtual crouch
     private void PhysicalCrouch() {
-        crouching = false;
-        crouchTarget.y = Mathf.Clamp(cameraControllerPosition.y - originalHeight, minCrouch, maxCrouch - originalHeight);
+        crouchTarget.y = Mathf.Clamp(cameraControllerPosition.y - additionalHeight, minCrouch, maxCrouch - originalHeight);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
 

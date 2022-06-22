@@ -19,27 +19,19 @@ public class Hands : MonoBehaviour {
         List<InputDevice> devices = new List<InputDevice>();
 
         InputDevices.GetDevicesWithCharacteristics(controllerCharacteristics, devices);
-        if (devices.Count > 0) {
-            targetDevice = devices[0];
-        }
+        if (devices.Count > 0) targetDevice = devices[0];
     }
 
+    // Select and activate actions animations
     void UpdateHandAnimation() {
-        if (targetDevice.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue)) {
-            handAnimator.SetFloat("Trigger", triggerValue);
-        }
-        else {
-            handAnimator.SetFloat("Trigger", 0);
-        }
+        if (targetDevice.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue)) handAnimator.SetFloat("Trigger", triggerValue);
+        else handAnimator.SetFloat("Trigger", 0);
 
-        if (targetDevice.TryGetFeatureValue(CommonUsages.grip, out float gripValue)) {
-            handAnimator.SetFloat("Grip", gripValue);
-        }
-        else {
-            handAnimator.SetFloat("Grip", 0);
-        }
+        if (targetDevice.TryGetFeatureValue(CommonUsages.grip, out float gripValue)) handAnimator.SetFloat("Grip", gripValue);
+        else handAnimator.SetFloat("Grip", 0);
     }
 
+    // Enabling and disabling of hand colliders with a delay
     public void EnableHandColliderDelay(float delay) {
         Invoke("EnableHandCollider", delay);
     }
@@ -54,11 +46,7 @@ public class Hands : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        if (!targetDevice.isValid) {
-            TryInitialize();
-        }
-        else {
-            UpdateHandAnimation();
-        }
+        if (!targetDevice.isValid) TryInitialize();
+        else UpdateHandAnimation();
     }
 }

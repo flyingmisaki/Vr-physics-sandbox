@@ -41,7 +41,6 @@ public class GrabbingHand : MonoBehaviour {
         joint.anchor = collision.contacts[0].point; 
         joint.connectedBody = collision.contacts[0].otherCollider.transform.GetComponentInParent<Rigidbody>(); 
         joint.enableCollision = false;
-        Debug.Log(collision);
     }
 
     // Destroys joint set up by attach
@@ -54,10 +53,6 @@ public class GrabbingHand : MonoBehaviour {
 
     // Calls Attach() on collision & on input
     void OnCollisionStay(Collision collision) {
-        if (!attached && ControllerSelected == 1 && collision.gameObject.tag == "Grabbable") {
-            Debug.Log("Before attach:", collision.gameObject);
-            Attach(collision);
-            Debug.Log("After attach:", collision.gameObject);
-        }
+        if (!attached && ControllerSelected == 1 && collision.gameObject.tag == "Grabbable") Attach(collision);
     }
 }
