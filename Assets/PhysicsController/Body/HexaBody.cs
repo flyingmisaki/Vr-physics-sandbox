@@ -238,8 +238,8 @@ public class HexaBody : MonoBehaviour {
 
     // Additional height on input for virtual crouch 
     private void VirtualCrouch() {
-        if (rightTrackpadValue.y < -0.75f) additionalHeight += crouchForce;
-        if (rightTrackpadValue.y > 0.75f) additionalHeight -= crouchForce;
+        if (rightTrackpadValue.y < -0.85f) additionalHeight += crouchForce;
+        if (rightTrackpadValue.y > 0.85f) additionalHeight -= crouchForce;
     }
 
     // Physical crouch dictated by head height and additional height based on virtual crouch
