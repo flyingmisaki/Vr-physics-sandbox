@@ -6,7 +6,7 @@ using UnityEditor.XR.LegacyInputHelpers;
 using UnityEngine.XR;
 using UnityEngine.InputSystem;
 
-public class HexaBody : MonoBehaviour {
+public class HexabodyForDemo : MonoBehaviour {
     // Public inspector fields
     [Header("XR Rig")]
     public GameObject PlayerController;
@@ -156,7 +156,7 @@ public class HexaBody : MonoBehaviour {
     // Camera and Rig stuff
     private void RigToBody() {
         // Roomscale
-        Body.transform.position = new Vector3(CameraController.transform.position.x, Body.transform.position.y, CameraController.transform.position.z);
+        // Body.transform.position = new Vector3(CameraController.transform.position.x, Body.transform.position.y, CameraController.transform.position.z);
         XRCamera.transform.rotation = CameraController.transform.rotation;
         
         // No roomscale
@@ -176,10 +176,10 @@ public class HexaBody : MonoBehaviour {
         Chest.transform.rotation = headYaw;
         Fender.transform.rotation = headYaw;
         if (rightTrackpadPressed == 1) return;
-        if (rightTrackpadValue.x > 0.25f || rightTrackpadValue.x < -0.25f) {
-            Head.transform.Rotate(0, rightTrackpadValue.x * turnForce, 0, Space.Self);
-            XRRig.transform.RotateAround(Body.transform.position, Vector3.up, rightTrackpadValue.x * turnForce);
-        }
+        // if (rightTrackpadValue.x > 0.25f || rightTrackpadValue.x < -0.25f) {
+        //     Head.transform.Rotate(0, rightTrackpadValue.x * turnForce, 0, Space.Self);
+        //     XRRig.transform.RotateAround(Body.transform.position, Vector3.up, rightTrackpadValue.x * turnForce);
+        // }
     }
     
     // Sphere control on input
