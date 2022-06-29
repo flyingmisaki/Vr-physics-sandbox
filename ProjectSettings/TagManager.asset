@@ -21,9 +21,9 @@ TagManager:
   - Left Hand Physics
   - 
   - Chain Rigidbodies
-  - 
-  - 
-  - 
+  - Body DG
+  - Right Hand Physics DG
+  - Left Hand Physics DG
   - 
   - 
   - 

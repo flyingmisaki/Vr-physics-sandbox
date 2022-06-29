@@ -57,6 +57,7 @@ public class HexaBody : MonoBehaviour {
     public float crouchForce = 0.005f;
     public float minCrouch = 0f;
     public float maxCrouch = 1.8f;
+    public float lowerBodyShink = 0.2f;
     public Vector3 crouchTarget;
 
     // Input fields
@@ -225,6 +226,20 @@ public class HexaBody : MonoBehaviour {
         crouchTarget.y = Mathf.Clamp(crouchTarget.y += jumpReleaseForce * Time.fixedDeltaTime, jumpMinCrouch, maxCrouch);
         Spine.targetPosition = new Vector3(0, crouchTarget.y, 0);
     }
+
+    // // Shrinks lower body as long as its not colliding with the ground
+    // private void ShrinkLowerBody() {
+    //     Sphere.transform.localScale -= lowerBodyShink;
+    // }
+
+    // // Grows lower body when its colliding with the ground
+    // private void GrowLowerBody() {
+    //     Sphere.transform.localScale += lowerBodyShink;
+    // }
+
+    // void OnCollisionStay(Collision collision) {
+    //     if (collision.gameObject == Sphere)
+    // }
 
     // Crouch control
     private void Crouch() {
