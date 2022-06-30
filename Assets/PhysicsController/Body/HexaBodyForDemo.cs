@@ -241,13 +241,18 @@ public class HexabodyForDemo : MonoBehaviour {
     // Additional height on input for virtual crouch 
     private void VirtualCrouch() {
         if (rightTrackpadValue.y < -0.85f) additionalHeight += crouchForce;
+        
         if (rightTrackpadValue.y > 0.85f) {
-            tiptoeing = true;
             additionalHeight -= crouchForce;
+            Debug.Log("UPPPPPPP");
+            if (additionalHeight > originalHeight) {
+                tiptoeing = true;
+            }
         }
-        if (tiptoeing == true && rightTrackpadValue.y < 0.85f) {
-            ResetCrouchHeight();
+        
+        if (tiptoeing == true && rightTrackpadValue.y < 0.85f && additionalHeight > originalHeight) {
             tiptoeing = false;
+            ResetCrouchHeight();
         }
     }
 
