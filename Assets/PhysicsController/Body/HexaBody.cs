@@ -105,7 +105,7 @@ public class HexaBody : MonoBehaviour {
     // On every physics update
     private void FixedUpdate() {
         GetControllerInputs();
-        CalculateValues();
+        CalculateDirection();
         MoveAndRotateHands();
         MoveAndRotateBody();
         RigToBody();
@@ -147,7 +147,7 @@ public class HexaBody : MonoBehaviour {
     }
 
     // Calculates body and movement values
-    private void CalculateValues() {
+    private void CalculateDirection() {
         // Values
         headYaw = Quaternion.Euler(0, XRCamera.transform.eulerAngles.y, 0);
         moveDirection = headYaw * new Vector3(leftTrackpadValue.x, 0, leftTrackpadValue.y);
@@ -260,7 +260,7 @@ public class HexaBody : MonoBehaviour {
             tiptoeing = true;
             additionalHeight -= crouchForce;
         }
-        if (tiptoeing == true && rightTrackpadValue.y < 0.85f) {
+        if (tiptoeing == true && rightTrackpadValue.y < 0.85f && additionalHeight < originalHeight) {
             ResetCrouchHeight();
             tiptoeing = false;
         }
