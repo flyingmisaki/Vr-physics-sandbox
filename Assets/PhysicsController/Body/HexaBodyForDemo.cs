@@ -104,7 +104,7 @@ public class HexabodyForDemo : MonoBehaviour {
     // On every physics update
     private void FixedUpdate() {
         GetControllerInputs();
-        CalculateValues();
+        CalculateDirection();
         MoveAndRotateHands();
         MoveAndRotateBody();
         RigToBody();
@@ -146,7 +146,7 @@ public class HexabodyForDemo : MonoBehaviour {
     }
 
     // Calculates body and movement values
-    private void CalculateValues() {
+    private void CalculateDirection() {
         // Values
         headYaw = Quaternion.Euler(0, XRCamera.transform.eulerAngles.y, 0);
         moveDirection = headYaw * new Vector3(leftTrackpadValue.x, 0, leftTrackpadValue.y);
