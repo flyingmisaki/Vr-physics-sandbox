@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
+using Unity.XR.CoreUtils;
 using UnityEditor.XR.LegacyInputHelpers;
 using UnityEngine.XR;
 using UnityEngine.InputSystem;
@@ -10,7 +11,7 @@ public class HexaBody : MonoBehaviour {
     // Public inspector fields
     [Header("XR Rig")]
     public GameObject PlayerController;
-    public XRRig XRRig;
+    public XROrigin XROrigin;
     public GameObject XRCamera;
     public GameObject CameraOffset;
 
@@ -97,8 +98,8 @@ public class HexaBody : MonoBehaviour {
 
     // On script start
     void Start() {
-        originalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
-        additionalHeight = originalHeight;
+        GetControllerInputs();
+        Initialize();
     }
 
     // On every physics update
@@ -117,6 +118,12 @@ public class HexaBody : MonoBehaviour {
         Debug.Log("Jumping: " + jumping);
         Debug.Log("Moving: " + moving);
         Debug.Log("Tiptoeing: " + tiptoeing);
+    }
+
+    // Initialize player's height
+    private void Initialize() {
+        originalHeight = (0.5f * Sphere.transform.lossyScale.y) + (0.5f * Fender.transform.lossyScale.y) + (Head.transform.position.y - Chest.transform.position.y);
+        additionalHeight = originalHeight;
     }
 
     // Gets controller inputs
@@ -162,7 +169,7 @@ public class HexaBody : MonoBehaviour {
         // No roomscale
         // Body.transform.position = cameraControllerPosition;
         // XRCamera.transform.position = Head.transform.position;
-        // XRRig.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
+        // XROrigin.transform.position = new Vector3(Fender.transform.position.x, Fender.transform.position.y - (0.5f * Fender.transform.localScale.y + 0.5f * Sphere.transform.localScale.y), Fender.transform.position.z);
     }
 
     // Movement
@@ -178,7 +185,7 @@ public class HexaBody : MonoBehaviour {
         if (rightTrackpadPressed == 1) return;
         if (rightTrackpadValue.x > 0.25f || rightTrackpadValue.x < -0.25f) {
             Head.transform.Rotate(0, rightTrackpadValue.x * turnForce, 0, Space.Self);
-            XRRig.transform.RotateAround(Body.transform.position, Vector3.up, rightTrackpadValue.x * turnForce);
+            XROrigin.transform.RotateAround(Body.transform.position, Vector3.up, rightTrackpadValue.x * turnForce);
         }
     }
     
