@@ -21,12 +21,16 @@ public class HexabodyForDemo : MonoBehaviour {
     public ActionBasedController LeftHandController;
 
     public InputActionReference RightTrackPadPress;
-    public InputActionReference RightTrackPadTouch;
     public InputActionReference LeftTrackPadPress;
+
+    public InputActionReference RightTrackPadTouch;
     public InputActionReference LeftTrackPadTouch;
 
     public InputActionReference RightPrimaryPress;
+    public InputActionReference LeftPrimaryPress;
+
     public InputActionReference RightSecondaryPress;
+    public InputActionReference LeftSecondaryPress;
 
     [Header("Hexabody")]
     public GameObject Body;
@@ -79,13 +83,15 @@ public class HexabodyForDemo : MonoBehaviour {
     private float leftTrackpadTouched;
 
     private float rightPrimaryPressed;
+    private float leftPrimaryPressed;
 
     private float rightSecondaryPressed;
+    private float leftSecondaryPressed;
 
     // Body fields
     private bool jumping = false;
     private bool moving = false;
-    private bool crouching = false;
+    // private bool crouching = false;
     private bool tiptoeing = false;
     
     private float originalHeight;
@@ -145,6 +151,9 @@ public class HexabodyForDemo : MonoBehaviour {
         leftTrackpadValue = LeftHandController.translateAnchorAction.action.ReadValue<Vector2>();
         leftTrackpadPressed = LeftTrackPadPress.action.ReadValue<float>();
         leftTrackpadTouched = LeftTrackPadTouch.action.ReadValue<float>();
+        // Left primary and secondary press
+        leftPrimaryPressed = LeftPrimaryPress.action.ReadValue<float>();
+        leftSecondaryPressed = LeftSecondaryPress.action.ReadValue<float>();
 
         // Headset controller position & rotation
         cameraControllerPosition = CameraController.positionAction.action.ReadValue<Vector3>();

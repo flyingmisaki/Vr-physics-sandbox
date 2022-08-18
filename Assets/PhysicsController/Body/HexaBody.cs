@@ -85,7 +85,7 @@ public class HexaBody : MonoBehaviour {
     // Body fields
     private bool jumping = false;
     private bool moving = false;
-    private bool crouching = false;
+    // private bool crouching = false;
     private bool tiptoeing = false;
     
     private float originalHeight;
