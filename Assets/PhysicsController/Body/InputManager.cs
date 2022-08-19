@@ -1,10 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
-using Unity.XR.CoreUtils;
-using UnityEditor.XR.LegacyInputHelpers;
-using UnityEngine.XR;
 using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour {
@@ -26,34 +21,38 @@ public class InputManager : MonoBehaviour {
     public InputActionReference LeftSecondaryPress;
 
     // Input fields
-    private Vector3 cameraControllerPosition;
-    private Vector3 rightHandControllerPosition;
-    private Vector3 leftHandControllerPosition;
+    public Vector3 cameraControllerPosition;
+    public Vector3 rightHandControllerPosition;
+    public Vector3 leftHandControllerPosition;
 
-    private Quaternion cameraControllerRotation;
-    private Quaternion rightHandControllerRotation;
-    private Quaternion leftHandControllerRotation;
+    public Quaternion cameraControllerRotation;
+    public Quaternion rightHandControllerRotation;
+    public Quaternion leftHandControllerRotation;
 
-    private Vector2 rightTrackpadValue;
-    private Vector2 leftTrackpadValue;
+    public Vector2 rightTrackpadValue;
+    public Vector2 leftTrackpadValue;
 
-    private float rightTrackpadPressed;
-    private float leftTrackpadPressed;
+    public float rightTrackpadPressed;
+    public float leftTrackpadPressed;
 
-    private float rightTrackpadTouched;
-    private float leftTrackpadTouched;
+    public float rightTrackpadTouched;
+    public float leftTrackpadTouched;
 
-    private float rightPrimaryPressed;
-    private float leftPrimaryPressed;
+    public float rightPrimaryPressed;
+    public float leftPrimaryPressed;
 
-    private float rightSecondaryPressed;
-    private float leftSecondaryPressed;
+    public float rightSecondaryPressed;
+    public float leftSecondaryPressed;
+
+    void Start() {
+        GetControllerInputs();
+    }
 
     void FixedUpdate() {
         GetControllerInputs();
     }
 
-    // Gets controller inputs
+    // Gets controller inputs and values for use with body
     private void GetControllerInputs() {
         // Right controller position & rotation
         rightHandControllerPosition = RightHandController.positionAction.action.ReadValue<Vector3>();
