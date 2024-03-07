@@ -2,7 +2,8 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.InputSystem;
 
-public class InputManager : MonoBehaviour {
+public class InputManager : MonoBehaviour
+{
     [Header("Controllers")]
     public ActionBasedController CameraController;
     public ActionBasedController RightHandController;
@@ -44,16 +45,19 @@ public class InputManager : MonoBehaviour {
     public float rightSecondaryPressed;
     public float leftSecondaryPressed;
 
-    void Start() {
+    void Start()
+    {
         GetControllerInputs();
     }
 
-    void FixedUpdate() {
+    void FixedUpdate()
+    {
         GetControllerInputs();
     }
 
     // Gets controller inputs and values for use with body
-    private void GetControllerInputs() {
+    private void GetControllerInputs()
+    {
         // Right controller position & rotation
         rightHandControllerPosition = RightHandController.positionAction.action.ReadValue<Vector3>();
         rightHandControllerRotation = RightHandController.rotationAction.action.ReadValue<Quaternion>();
@@ -75,7 +79,7 @@ public class InputManager : MonoBehaviour {
         // Left primary and secondary press
         leftPrimaryPressed = LeftPrimaryPress.action.ReadValue<float>();
         leftSecondaryPressed = LeftSecondaryPress.action.ReadValue<float>();
-        
+
         // Headset controller position & rotation
         cameraControllerPosition = CameraController.positionAction.action.ReadValue<Vector3>();
         cameraControllerRotation = CameraController.rotationAction.action.ReadValue<Quaternion>();

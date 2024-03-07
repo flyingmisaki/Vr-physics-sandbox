@@ -7866,7 +7866,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 375210574}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.8399998, z: 0.11999998}
+  m_LocalPosition: {x: 0, y: 0.8, z: 0}
   m_LocalScale: {x: 0.225, y: 0.225, z: 0.225}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -14802,7 +14802,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 741605625}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.8, z: 0.12}
+  m_LocalPosition: {x: 0, y: 0.8, z: 0}
   m_LocalScale: {x: 0.11, y: 0.11, z: 0.11}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -14879,7 +14879,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 741605625}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -31621,7 +31621,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1483849022}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.8, z: 0.12}
+  m_LocalPosition: {x: 0, y: 0.8, z: 0}
   m_LocalScale: {x: 0.11, y: 0.11, z: 0.11}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -31698,7 +31698,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1483849022}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -44230,11 +44230,11 @@ MonoBehaviour:
     m_Bits: 1
   body: {fileID: 1387727450657337522}
   otherFoot: {fileID: 6817789153218254605}
-  speed: 4
-  stepDistance: 0.2
-  stepLength: 0.2
-  sideStepLength: 0.1
-  stepHeight: 0.3
+  speed: 5
+  stepDistance: 0.3
+  stepLength: 0.25
+  sideStepLength: 0.15
+  stepHeight: 0.35
   footOffset: {x: 0, y: 0, z: 0}
   footRotOffset: {x: -120, y: 180, z: 0}
   footYPosOffset: 0.1
@@ -44724,7 +44724,7 @@ Transform:
   m_GameObject: {fileID: 1732164498469251592}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.315, z: 0}
-  m_LocalScale: {x: 1.15, y: 1.15, z: 1.15}
+  m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7343066089955217557}
@@ -46211,11 +46211,11 @@ MonoBehaviour:
     m_Bits: 1
   body: {fileID: 1387727450657337522}
   otherFoot: {fileID: 630695441963469625}
-  speed: 4
-  stepDistance: 0.2
-  stepLength: 0.2
-  sideStepLength: 0.1
-  stepHeight: 0.3
+  speed: 5
+  stepDistance: 0.3
+  stepLength: 0.25
+  sideStepLength: 0.15
+  stepHeight: 0.35
   footOffset: {x: 0, y: 0, z: 0}
   footRotOffset: {x: -120, y: 180, z: 0}
   footYPosOffset: 0.1
@@ -46652,7 +46652,7 @@ MonoBehaviour:
   head:
     vrTarget: {fileID: 69578041}
     ikTarget: {fileID: 630695442448507768}
-    trackingPositionOffset: {x: 0, y: 0, z: -0.1}
+    trackingPositionOffset: {x: 0, y: 0, z: 0}
     trackingRotationOffset: {x: 0, y: 0, z: 0}
   leftHand:
     vrTarget: {fileID: 1483849023}
